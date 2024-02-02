@@ -289,21 +289,22 @@ class TLSClientAutomaton(_TLSAutomaton):
     @ATMT.condition(PREPARE_CLIENTFLIGHT1)
     def should_add_ClientHello(self):
         if self.client_hello:
-            p = self.client_hello
+            self.add_msg(self.client_hello)
+            raise self.ADDED_CLIENTHELLO()
         else:
             p = TLSClientHello()
-        ext = []
-        # Add TLS_Ext_SignatureAlgorithms for TLS 1.2 ClientHello
-        if self.cur_session.advertised_tls_version == 0x0303:
-            ext += [TLS_Ext_SignatureAlgorithms(sig_algs=["sha256+rsa"])]
-        # Add TLS_Ext_ServerName
-        if self.server_name:
-            ext += TLS_Ext_ServerName(
-                servernames=[ServerName(servername=self.server_name)]
-            )
-        p.ext = ext
-        self.add_msg(p)
-        raise self.ADDED_CLIENTHELLO()
+            ext = []
+            # Add TLS_Ext_SignatureAlgorithms for TLS 1.2 ClientHello
+            if self.cur_session.advertised_tls_version == 0x0303:
+                ext += [TLS_Ext_SignatureAlgorithms(sig_algs=["sha256+rsa"])]
+            # Add TLS_Ext_ServerName
+            if self.server_name:
+                ext += TLS_Ext_ServerName(
+                    servernames=[ServerName(servername=self.server_name)]
+                )
+            p.ext = ext
+            self.add_msg(p)
+            raise self.ADDED_CLIENTHELLO()
 
     @ATMT.state()
     def ADDED_CLIENTHELLO(self):
